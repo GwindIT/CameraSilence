@@ -1,4 +1,4 @@
-package secspace.camerasilence;
+package xiang.camerasilence;
 
 import android.Manifest;
 import android.graphics.Bitmap;
@@ -23,12 +23,19 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, SurfaceHolder.Callback {
+/**
+ * Author : Xiang
+ * E-mail : Gwind_IT@163.com
+ * Date   : 18-12-12
+ * Version: 1.0
+ * Desc   : 静默拍照
+ */
+public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
 
     public static String PHOTO_PATH = Environment.getExternalStorageDirectory() + "/silent";
 
-    Button mBntGetPreview, mBtnTakePicture, mBtnRelease;
+    Button mBtnTakePicture;
     SurfaceView mSurface;
     SurfaceView mSurface2;
 
@@ -42,48 +49,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         requestPermission();
         initView();
     }
 
+    /**
+     * 简单的申请权限,待完善
+     */
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
     }
 
     private void initView() {
-        mBntGetPreview = findViewById(R.id.btn_get_preview);
-        mBtnRelease = findViewById(R.id.btn_release);
         mBtnTakePicture = findViewById(R.id.btn_take_picture);
         mSurface = findViewById(R.id.camera_surface);
         mSurface2 = findViewById(R.id.camera_surface2);
         holder = mSurface.getHolder();//获得句柄
         holder2 = mSurface2.getHolder();
 
-        mBtnRelease.setOnClickListener(this);
-        mBntGetPreview.setOnClickListener(this);
-        mBtnTakePicture.setOnClickListener(this);
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_get_preview:
-//                getFrontPreview();
+        mBtnTakePicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 getBackPreview();
-                break;
-            case R.id.btn_take_picture:
                 takBackPicture();
-                break;
-            case R.id.btn_release:
-                mCamera.release();
-                mCamera = null;
-                break;
-
-        }
+            }
+        });
     }
 
-
+    /**
+     * 打开前置摄像头,并设置预览
+     */
     private void getFrontPreview() {
         if (mCamera != null) {
             mCamera.stopPreview();//停掉原来摄像头的预览
@@ -103,14 +98,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         try {
-            mCamera.setPreviewDisplay(holder);//通过surfaceview显示取景画面
+            mCamera.setPreviewDisplay(holder);//通过surfaceview显示取景画面,否则无法拍摄
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         mCamera.startPreview();//开始预览
     }
 
+    /**
+     * 打开后置摄像头,并且设置预览
+     */
     private void getBackPreview() {
         if (mCamera2 != null) {
             mCamera2.stopPreview();//停掉原来摄像头的预览
@@ -138,7 +135,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCamera2.startPreview();
     }
 
-
+    /**
+     * 前置摄像头拍照
+     */
     private void takeFrontPicture() {
         mCamera.autoFocus(new Camera.AutoFocusCallback() {//自动对焦
             @Override
@@ -151,6 +150,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    /**
+     * 后置摄像头拍照
+     */
     private void takBackPicture() {
         mCamera2.autoFocus(new Camera.AutoFocusCallback() {//自动对焦
             @Override
@@ -163,8 +165,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-
-    private void savePicture(Camera camera, final String cameraId, final boolean save) {
+    /**
+     * 保存图片并且保存成功后调用前置摄像头拍照
+     *
+     * @param camera    Camera
+     * @param cameraId  前后置摄像头
+     * @param continued 是否继续执行前置摄像头调用拍照.
+     */
+    private void savePicture(Camera camera, final String cameraId, final boolean continued) {
         //设置参数，并拍照
         Camera.Parameters params = camera.getParameters();
         params.setPictureFormat(PixelFormat.JPEG);//图片格式
@@ -217,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             e.printStackTrace();
                         }
                     }
-                    if (save) {
+                    if (continued) {
                         getFrontPreview();
                         takeFrontPicture();
                     }

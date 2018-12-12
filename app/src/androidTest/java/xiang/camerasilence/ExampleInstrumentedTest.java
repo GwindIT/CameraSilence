@@ -1,4 +1,4 @@
-package secspace.camerasilence;
+package xiang.camerasilence;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
